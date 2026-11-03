@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adnan Enterprises</title>
+
+    <!-- PWA Code -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+      }
+    </script>
+
+    <style>
+        * { box-sizing: border-box; }
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            padding: 0; 
+            font-family: Arial, Helvetica, sans-serif; 
+            background-color: #f4f7f6; 
+            overflow: hidden; 
+        }
+        .container { 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            max-width: 900px; 
+            margin: 0 auto; 
+            background: #ffffff; 
+            padding: 12px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            overflow-y: auto; 
+            position: relative; 
+        }
+        
+        .brand-title-main {
+            text-align: center;
+            font-size: clamp(24px, 6vw, 34px);
+            font-weight: 900;
+            color: #e5a108;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 10px 0 12px 0;
+            white-space: nowrap;
+            text-shadow: 
+                0 1px 0 #b37402,
+                0 2px 0 #8c5700,
+                0 3px 0 #663d00,
+                0 4px 5px rgba(0, 0, 0, 0.45);
+        }
+
+        /* Account Dropdown Styling */
+        .account-select-group { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            width: 100%;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eee;
+            flex-wrap: wrap;
+        }
+        .account-select-group label {
+            font-size: 13px; 
+            font-weight: bold; 
+            color: #333;
+            white-space: nowrap;
+        }
+        .account-select { 
+            padding: 5px 10px; 
+            font-size: clamp(13px, 0.8vw + 8px, 15px); 
+            border-radius: 4px; 
+            border: 1px solid #007bff; 
+            background-color: #e9f5ff; 
+            font-weight: bold; 
+            color: #007bff; 
+            cursor: pointer; 
+            outline: none;
+        }
+
+        /* Table Styling */
+        .table-portion { 
+            flex: 1 1 auto; 
+            overflow-y: auto; 
+            overflow-x: auto; 
+            margin-top: 5px; 
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            width: 100%; 
+            position: relative; 
+            -webkit-overflow-scrolling: touch; 
+        }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { border: 1px solid #ddd; padding: 8px 6px; text-align: center; font-size: 13px; vertical-align: middle; word-wrap: break-word; }
+        th { background-color: #f2f2f2; font-weight: bold; position: sticky; top: 0; z-index: 10; color: #333; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tbody tr { height: 35px; }
+
+        .text-right { text-align: right !important; padding-right: 8px !important; }
+        .text-left { text-align: left !important; padding-left: 8px !important; }
+
+        .footer-text { 
+            text-align: center; 
+            font-size: clamp(11px, 0.6vw + 7px, 13px); 
+            font-weight: bold; 
+            color: #333; 
+            margin-top: 15px; 
+            margin-bottom: 10px; 
+            padding-bottom: 10px; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <!-- Top Brand Title -->
+            <div class="brand-title-main">Adnan Enterprises</div>
+
+            <!-- 3 Accounts Dropdown List -->
+            <div id="account-select-row" class="account-select-group">
+                <label for="account-filter">Select Account: </label>
+                <select id="account-filter" class="account-select">
+                    <option value="Main">Main</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Partner">Partner</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Table Portion -->
+        <div id="table-container" class="table-portion">
+            <table id="main-view-table">
+                <thead>
+                    <tr>
+                        <th style="width: 8%;">Sr.No.</th>
+                        <th style="width: 15%;">Date</th>
+                        <th style="width: 35%;" class="text-left">Description</th>
+                        <th style="width: 14%;" class="text-right">Amount Received</th>
+                        <th style="width: 14%;" class="text-right">Amount Send</th>
+                        <th style="width: 14%;" class="text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody id="expense-list">
+                    <!-- Sample Row -->
+                    <tr>
+                        <td>1</td>
+                        <td>03-11-2026</td>
+                        <td class="text-left">Sample Description</td>
+                        <td class="text-right" style="color: #28a745; font-weight: bold;">0</td>
+                        <td class="text-right" style="color: #dc3545; font-weight: bold;">0</td>
+                        <td class="text-right" style="font-weight: bold;">0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div id="created-by-container">
+            <div class="footer-text">Created by Sharifuddin</div>
+        </div>
+    </div>
+
+    <script type="module">
+        const accountFilter = document.getElementById('account-filter');
+        
+        accountFilter.addEventListener('change', () => {
+            console.log("Selected Account:", accountFilter.value);
+            // Yahan aap apne naye account ke mutabiq data load karne ka logic likh sakte hain
+        });
+    </script>
+</body>
+</html>
