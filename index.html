@@ -320,7 +320,7 @@
                 </thead>
                 <tbody id="expense-list">
                     <tr>
-                        <td colspan="7" style="color: #666; padding: 10px;">Firebase config required...</td>
+                        <td colspan="7" style="color: #666; padding: 10px;">Loading data...</td>
                     </tr>
                 </tbody>
                 <tfoot>
@@ -409,22 +409,38 @@
     </div>
 
     <script type="module">
-        // ==========================================
-        // PASTE YOUR NEW FIREBASE CONFIGURATION HERE
-        // ==========================================
-        /*
+        // Firebase CDN Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, updateDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            onSnapshot, 
+            deleteDoc, 
+            updateDoc, 
+            doc, 
+            query, 
+            orderBy 
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+        // Firebase Configuration
         const firebaseConfig = {
-            // Naya config yahan aayega
+            apiKey: "AIzaSyDMN4Zz4sfepAEhOPF33Y4lqDkLAJlvKKo",
+            authDomain: "adnan-7a82d.firebaseapp.com",
+            projectId: "adnan-7a82d",
+            storageBucket: "adnan-7a82d.firebasestorage.app",
+            messagingSenderId: "649815030816",
+            appId: "1:649815030816:web:e420cabfdd8be9e4735045",
+            measurementId: "G-558P0SFEZN"
         };
 
+        // Initialize Firebase & Firestore
         const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
         const db = getFirestore(app);
         const expensesRef = collection(db, "ceo_expenses");
         const q = query(expensesRef, orderBy("date", "asc"));
-        */
 
         const accountFilter = document.getElementById('account-filter');
         const expenseList = document.getElementById('expense-list');
@@ -525,9 +541,7 @@
 
                     if (newVal !== currentVal) {
                         try {
-                            if (typeof updateDoc !== 'undefined' && typeof db !== 'undefined') {
-                                await updateDoc(doc(db, "ceo_expenses", docId), { [fieldName]: newVal });
-                            }
+                            await updateDoc(doc(db, "ceo_expenses", docId), { [fieldName]: newVal });
                         } catch (err) {
                             console.error("Update error:", err);
                             renderData();
@@ -652,8 +666,11 @@
                 btn.addEventListener('click', async (e) => {
                     const docId = e.currentTarget.getAttribute('data-id');
                     if (confirm("Kiya aap is entry ko delete karna chahte hain?")) {
-                        if (typeof deleteDoc !== 'undefined' && typeof db !== 'undefined') {
+                        try {
                             await deleteDoc(doc(db, "ceo_expenses", docId));
+                        } catch (err) {
+                            console.error("Delete error:", err);
+                            alert("Delete fail ho gaya.");
                         }
                     }
                 });
@@ -672,6 +689,21 @@
             });
         }
 
+        // Realtime Data Listener
+        onSnapshot(q, (snapshot) => {
+            allExpensesData = [];
+            snapshot.forEach((docSnap) => {
+                allExpensesData.push({
+                    id: docSnap.id,
+                    expense: docSnap.data()
+                });
+            });
+            renderData();
+        }, (error) => {
+            console.error("Firestore snapshot error:", error);
+            expenseList.innerHTML = `<tr><td colspan="7" style="color: red; padding: 12px;">Data load karne mein error aya: ${error.message}</td></tr>`;
+        });
+
         // Inline Add Entry
         async function handleQuickAdd() {
             const desc = newDescInput.value.trim();
@@ -681,23 +713,19 @@
             }
 
             try {
-                if (typeof addDoc !== 'undefined' && typeof expensesRef !== 'undefined') {
-                    await addDoc(expensesRef, {
-                        account: accountFilter.value,
-                        date: newDateInput.value || getTodayDateString(),
-                        desc: desc,
-                        received: parseFloat(newReceivedInput.value) || 0,
-                        sent: parseFloat(newSentInput.value) || 0,
-                        createdAt: new Date()
-                    });
+                await addDoc(expensesRef, {
+                    account: accountFilter.value,
+                    date: newDateInput.value || getTodayDateString(),
+                    desc: desc,
+                    received: parseFloat(newReceivedInput.value) || 0,
+                    sent: parseFloat(newSentInput.value) || 0,
+                    createdAt: new Date()
+                });
 
-                    newDescInput.value = '';
-                    newReceivedInput.value = '';
-                    newSentInput.value = '';
-                    newDateInput.value = getTodayDateString();
-                } else {
-                    alert("Firebase connect nahi hai.");
-                }
+                newDescInput.value = '';
+                newReceivedInput.value = '';
+                newSentInput.value = '';
+                newDateInput.value = getTodayDateString();
             } catch (err) {
                 console.error("Error adding entry:", err);
                 alert("Record add karne me error aaya.");
@@ -722,19 +750,15 @@
             }
 
             try {
-                if (typeof addDoc !== 'undefined' && typeof expensesRef !== 'undefined') {
-                    await addDoc(expensesRef, {
-                        account: accountFilter.value,
-                        date: addModalDate.value || getTodayDateString(),
-                        desc: desc,
-                        received: parseFloat(addModalReceived.value) || 0,
-                        sent: parseFloat(addModalSent.value) || 0,
-                        createdAt: new Date()
-                    });
-                    addModal.style.display = 'none';
-                } else {
-                    alert("Firebase connect nahi hai.");
-                }
+                await addDoc(expensesRef, {
+                    account: accountFilter.value,
+                    date: addModalDate.value || getTodayDateString(),
+                    desc: desc,
+                    received: parseFloat(addModalReceived.value) || 0,
+                    sent: parseFloat(addModalSent.value) || 0,
+                    createdAt: new Date()
+                });
+                addModal.style.display = 'none';
             } catch (err) {
                 console.error("Error adding modal entry:", err);
                 alert("Entry add nahi ho saki.");
@@ -751,15 +775,13 @@
             }
 
             try {
-                if (typeof updateDoc !== 'undefined' && typeof db !== 'undefined') {
-                    await updateDoc(doc(db, "ceo_expenses", docId), {
-                        date: modalDate.value,
-                        desc: desc,
-                        received: parseFloat(modalReceived.value) || 0,
-                        sent: parseFloat(modalSent.value) || 0
-                    });
-                    editModal.style.display = 'none';
-                }
+                await updateDoc(doc(db, "ceo_expenses", docId), {
+                    date: modalDate.value,
+                    desc: desc,
+                    received: parseFloat(modalReceived.value) || 0,
+                    sent: parseFloat(modalSent.value) || 0
+                });
+                editModal.style.display = 'none';
             } catch (err) {
                 console.error("Error updating entry:", err);
                 alert("Update fail ho gaya.");
