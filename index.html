@@ -100,6 +100,12 @@
         .card-received { background-color: #28a745; }
         .card-sent { background-color: #007bff; }
         .card-total { background-color: #dc3545; }
+        
+        /* New Breakdown Cards for Main Account */
+        .card-personal-exp { background-color: #6f42c1; }
+        .card-partner-exp { background-color: #fd7e14; }
+        .card-net-calc { background-color: #20c997; }
+
         .summary-card h4 { margin: 0; font-size: 11px; text-transform: uppercase; }
         .summary-card p { margin: 3px 0 0 0; font-size: 14px; font-weight: bold; }
 
@@ -302,6 +308,22 @@
                     <p id="total-balance">0</p>
                 </div>
             </div>
+
+            <!-- Main Account Extra 3 Summary Cards -->
+            <div id="main-breakdown-cards" class="summary-cards" style="display: none;">
+                <div class="summary-card card-personal-exp">
+                    <h4>Personal Expense</h4>
+                    <p id="personal-expense-total">0</p>
+                </div>
+                <div class="summary-card card-partner-exp">
+                    <h4>Partner Expense</h4>
+                    <p id="partner-expense-total">0</p>
+                </div>
+                <div class="summary-card card-net-calc">
+                    <h4>Net Remaining</h4>
+                    <p id="net-remaining-total">0</p>
+                </div>
+            </div>
         </div>
 
         <!-- Table Portion -->
@@ -449,6 +471,12 @@
         const totalReceivedDisplay = document.getElementById('total-received');
         const totalSentDisplay = document.getElementById('total-sent');
         const totalBalanceDisplay = document.getElementById('total-balance');
+
+        // New Elements for Main Account Breakdown
+        const mainBreakdownCards = document.getElementById('main-breakdown-cards');
+        const personalExpenseDisplay = document.getElementById('personal-expense-total');
+        const partnerExpenseDisplay = document.getElementById('partner-expense-total');
+        const netRemainingDisplay = document.getElementById('net-remaining-total');
 
         // Inline Inputs
         const newDateInput = document.getElementById('new-date');
@@ -657,9 +685,36 @@
 
             if (nextSnoEl) nextSnoEl.innerText = count;
 
+            const mainBalance = totalRec - totalSent;
             totalReceivedDisplay.innerText = formatNumber(totalRec);
             totalSentDisplay.innerText = formatNumber(totalSent);
-            totalBalanceDisplay.innerText = formatNumber(totalRec - totalSent);
+            totalBalanceDisplay.innerText = formatNumber(mainBalance);
+
+            // Calculate Personal and Partner Expenses across all data
+            if (selectedAccount === 'main') {
+                mainBreakdownCards.style.display = 'flex';
+
+                let personalExp = 0;
+                let partnerExp = 0;
+
+                allExpensesData.forEach(item => {
+                    const acc = (item.expense.account || '').toLowerCase().trim();
+                    const sentAmt = parseFloat(item.expense.sent) || 0;
+                    if (acc === 'personal') {
+                        personalExp += sentAmt;
+                    } else if (acc === 'partner') {
+                        partnerExp += sentAmt;
+                    }
+                });
+
+                const netRemaining = mainBalance - personalExp - partnerExp;
+
+                personalExpenseDisplay.innerText = formatNumber(personalExp);
+                partnerExpenseDisplay.innerText = formatNumber(partnerExp);
+                netRemainingDisplay.innerText = formatNumber(netRemaining);
+            } else {
+                mainBreakdownCards.style.display = 'none';
+            }
 
             // Action Button Event Listeners
             document.querySelectorAll('.delete-btn').forEach(btn => {
