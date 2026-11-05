@@ -122,9 +122,9 @@
             -webkit-overflow-scrolling: touch; 
         }
         table { 
-            width: 100%; 
+            width: 450px; 
+            min-width: 450px;
             border-collapse: collapse; 
-            min-width: 520px;
             table-layout: fixed;
         }
         th, td { 
@@ -146,6 +146,11 @@
         }
         tr:nth-child(even) { background-color: #f9f9f9; }
         tbody tr { height: 32px; }
+
+        .date-cell {
+            line-height: 1.15;
+            white-space: normal;
+        }
 
         .text-right { text-align: right !important; padding-right: 6px !important; }
         .text-left { text-align: left !important; padding-left: 6px !important; }
@@ -334,11 +339,11 @@
             <table id="main-view-table">
                 <thead>
                     <tr>
-                        <th style="width: 7%;">Sr.No.</th>
-                        <th style="width: 14%;">Date</th>
-                        <th style="width: 33%;" class="text-left">Description</th>
-                        <th style="width: 14%;" class="text-right">Amount<br>Received</th>
-                        <th style="width: 14%;" class="text-right">Amount<br>Send</th>
+                        <th style="width: 9%;">Sr.No</th>
+                        <th style="width: 10%;">Date</th>
+                        <th style="width: 31%;" class="text-left">Description</th>
+                        <th style="width: 16%;" class="text-right">Amount<br>Received</th>
+                        <th style="width: 16%;" class="text-right">Amount<br>Send</th>
                         <th style="width: 18%;" class="text-right">Total</th>
                         <th style="width: 10%;">Action</th>
                     </tr>
@@ -516,10 +521,13 @@
             return Number(num).toLocaleString('en-IN');
         }
 
+        // Date Formatter: dd-MM and full YYYY (e.g. 2026) in 2 lines
         function formatDateDisplay(dateStr) {
             if (!dateStr) return '-';
             const parts = dateStr.split('-');
-            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            if (parts.length === 3) {
+                return `${parts[2]}-${parts[1]}<br>${parts[0]}`;
+            }
             return dateStr;
         }
 
@@ -624,9 +632,10 @@
                 const tdSno = document.createElement('td');
                 tdSno.innerText = count++;
 
-                // Date
+                // Date (dd-MM in line 1, YYYY in line 2)
                 const tdDate = document.createElement('td');
-                tdDate.innerText = formatDateDisplay(expense.date);
+                tdDate.className = 'date-cell';
+                tdDate.innerHTML = formatDateDisplay(expense.date);
                 makeCellEditable(tdDate, id, 'date', expense.date || '', 'date');
 
                 // Description
