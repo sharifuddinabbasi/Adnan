@@ -111,7 +111,7 @@
         .card-sent { background-color: #007bff; }
         .card-total { background-color: #dc3545; }
         
-        /* New Breakdown Cards for Main Account */
+        /* Breakdown Cards for Main Account */
         .card-personal-exp { background-color: #6f42c1; }
         .card-partner-exp { background-color: #fd7e14; }
         .card-net-calc { background-color: #20c997; }
@@ -461,7 +461,8 @@
             updateDoc, 
             doc, 
             query, 
-            orderBy 
+            orderBy,
+            serverTimestamp 
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // Firebase Configuration
@@ -480,7 +481,9 @@
         const analytics = getAnalytics(app);
         const db = getFirestore(app);
         const expensesRef = collection(db, "ceo_expenses");
-        const q = query(expensesRef, orderBy("date", "asc"));
+
+        // Entry waqt ke mutabiq sort: pehli entry upar, nayi/bad wali entry neche
+        const q = query(expensesRef, orderBy("createdAt", "asc"));
 
         const accountFilter = document.getElementById('account-filter');
         const expenseList = document.getElementById('expense-list');
@@ -796,7 +799,7 @@
                     desc: desc,
                     received: parseFloat(newReceivedInput.value) || 0,
                     sent: parseFloat(newSentInput.value) || 0,
-                    createdAt: new Date()
+                    createdAt: serverTimestamp()
                 });
 
                 newDescInput.value = '';
@@ -833,7 +836,7 @@
                     desc: desc,
                     received: parseFloat(addModalReceived.value) || 0,
                     sent: parseFloat(addModalSent.value) || 0,
-                    createdAt: new Date()
+                    createdAt: serverTimestamp()
                 });
                 addModal.style.display = 'none';
             } catch (err) {
