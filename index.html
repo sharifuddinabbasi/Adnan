@@ -106,7 +106,7 @@
         .card-partner-exp { background-color: #fd7e14; }
         .card-net-calc { background-color: #20c997; }
 
-        .summary-card h4 { margin: 0; font-size: 11px; text-transform: uppercase; }
+        .summary-card h4 { margin: 1px 0 0 0; font-size: 11px; text-transform: uppercase; }
         .summary-card p { margin: 3px 0 0 0; font-size: 14px; font-weight: bold; }
 
         /* Table Portion with Horizontal Scroll */
@@ -293,17 +293,20 @@
                 <button type="button" id="open-add-modal-btn" class="add-btn" style="width: auto; padding: 5px 12px;">+ Add New Entry</button>
             </div>
 
-            <!-- Summary Totals -->
+            <!-- Summary Totals with Main Account Label -->
             <div class="summary-cards">
                 <div class="summary-card card-received">
+                    <span style="font-size: 10px; opacity: 0.9; display: block; font-weight: bold; letter-spacing: 0.5px;">MAIN ACCOUNT</span>
                     <h4>Total Received</h4>
                     <p id="total-received">0</p>
                 </div>
                 <div class="summary-card card-sent">
+                    <span style="font-size: 10px; opacity: 0.9; display: block; font-weight: bold; letter-spacing: 0.5px;">MAIN ACCOUNT</span>
                     <h4>Total Sent</h4>
                     <p id="total-sent">0</p>
                 </div>
                 <div class="summary-card card-total">
+                    <span style="font-size: 10px; opacity: 0.9; display: block; font-weight: bold; letter-spacing: 0.5px;">MAIN ACCOUNT</span>
                     <h4>Balance</h4>
                     <p id="total-balance">0</p>
                 </div>
@@ -472,7 +475,7 @@
         const totalSentDisplay = document.getElementById('total-sent');
         const totalBalanceDisplay = document.getElementById('total-balance');
 
-        // New Elements for Main Account Breakdown
+        // Main Account Breakdown Elements
         const mainBreakdownCards = document.getElementById('main-breakdown-cards');
         const personalExpenseDisplay = document.getElementById('personal-expense-total');
         const partnerExpenseDisplay = document.getElementById('partner-expense-total');
