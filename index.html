@@ -191,9 +191,14 @@
         .text-right { text-align: right !important; padding-right: 6px !important; }
         .text-left { text-align: left !important; padding-left: 6px !important; }
         
-        html[lang="ur"] .urdu-text-align {
+        .urdu-text-align {
             text-align: right !important;
             padding-right: 6px !important;
+        }
+        .english-desc-in-urdu {
+            text-align: left !important;
+            padding-left: 6px !important;
+            direction: ltr !important;
         }
 
         /* Inline Editable Cells */
@@ -381,36 +386,36 @@
                 <button type="button" class="export-btn btn-jpg" id="btn-jpg">JPG</button>
             </div>
 
-            <!-- Summary Totals -->
-            <div class="summary-cards">
-                <div class="summary-card card-received">
+            <!-- Summary Totals (1st line cards: Received, Sent, Balance) -->
+            <div class="summary-cards" id="summary-cards-container">
+                <div class="summary-card card-received" id="card-1">
                     <span style="font-size: 10px; opacity: 0.9; display: block; font-weight: bold; letter-spacing: 0.5px;" data-i18n="m-acc-1">MAIN ACCOUNT</span>
                     <h4 data-i18n="t-rec">Total Received</h4>
                     <p id="total-received">0</p>
                 </div>
-                <div class="summary-card card-sent">
+                <div class="summary-card card-sent" id="card-2">
                     <span style="font-size: 10px; opacity: 0.9; display: block; font-weight: bold; letter-spacing: 0.5px;" data-i18n="m-acc-2">MAIN ACCOUNT</span>
                     <h4 data-i18n="t-snt">Total Sent</h4>
                     <p id="total-sent">0</p>
                 </div>
-                <div class="summary-card card-total">
+                <div class="summary-card card-total" id="card-3">
                     <span style="font-size: 10px; opacity: 0.9; display: block; font-weight: bold; letter-spacing: 0.5px;" data-i18n="m-acc-3">MAIN ACCOUNT</span>
                     <h4 data-i18n="bal">Balance</h4>
                     <p id="total-balance">0</p>
                 </div>
             </div>
 
-            <!-- Main Account Extra Summary Cards -->
+            <!-- Main Account Extra Summary Cards (2nd line cards: Personal, Partner, Net Remaining) -->
             <div id="main-breakdown-cards" class="summary-cards" style="display: none;">
-                <div class="summary-card card-personal-exp">
+                <div class="summary-card card-personal-exp" id="sub-card-1">
                     <h4 data-i18n="p-exp">Personal Expense</h4>
                     <p id="personal-expense-total">0</p>
                 </div>
-                <div class="summary-card card-partner-exp">
+                <div class="summary-card card-partner-exp" id="sub-card-2">
                     <h4 data-i18n="pt-exp">Partner Expense</h4>
                     <p id="partner-expense-total">0</p>
                 </div>
-                <div class="summary-card card-net-calc">
+                <div class="summary-card card-net-calc" id="sub-card-3">
                     <h4 data-i18n="n-rem">Net Remaining</h4>
                     <p id="net-remaining-total">0</p>
                 </div>
@@ -452,7 +457,7 @@
 
         <!-- Footer -->
         <div id="created-by-container">
-            <div class="footer-text" data-i18n="ft-cr">Created by Adnan Hassan</div>
+            <div class="footer-text" data-i18n="ft-cr">Created by Sharifuddin</div>
         </div>
     </div>
 
@@ -655,7 +660,18 @@
                 makeCellEditable(tdDate, id, 'date', expense.date || '', 'date');
 
                 const tdDesc = document.createElement('td'); 
-                tdDesc.className = 'text-left urdu-text-align'; tdDesc.innerText = expense.desc || '-';
+                
+                const descText = expense.desc || '-';
+                const isEnglishText = /^[A-Za-z0-9\s\-_.,()]+$/.test(descText);
+                const currentLang = document.documentElement.lang;
+
+                if (currentLang === 'ur' && isEnglishText) {
+                    tdDesc.className = 'text-left english-desc-in-urdu';
+                } else {
+                    tdDesc.className = 'text-left urdu-text-align';
+                }
+
+                tdDesc.innerText = descText;
                 makeCellEditable(tdDesc, id, 'desc', expense.desc || '', 'text');
 
                 const tdRec = document.createElement('td'); 
@@ -766,7 +782,7 @@
 
 
         /* ==============================================
-           LANGUAGE TRANSLATION & SCROLL LOGIC
+           LANGUAGE TRANSLATION, SCROLL & CORRECTED LAYOUT LOGIC
            ============================================== */
         const translations = {
             en: {
@@ -789,7 +805,7 @@
                 "th-to": "Total",
                 "th-ac": "Action",
                 "add-short": "Add",
-                "ft-cr": "Created by Adnan Hassan",
+                "ft-cr": "Created by Sharifuddin",
                 "mod-edit": "Edit Entry",
                 "mod-add": "Add New Entry",
                 "mod-rec": "Amount Received",
@@ -833,16 +849,47 @@
             document.documentElement.lang = lang; 
             const mainTable = document.getElementById('main-view-table');
             const tableContainer = document.getElementById('table-container');
+            const cardsContainer = document.getElementById('summary-cards-container');
+            const card1 = document.getElementById('card-1');
+            const card2 = document.getElementById('card-2');
+            const card3 = document.getElementById('card-3');
+
+            const subCardsContainer = document.getElementById('main-breakdown-cards');
+            const subCard1 = document.getElementById('sub-card-1');
+            const subCard2 = document.getElementById('sub-card-2');
+            const subCard3 = document.getElementById('sub-card-3');
             
             if (lang === 'ur') {
                 mainTable.dir = 'rtl';
-                // Urdu click par screen right side scroll ho jaye
+                // Desired Urdu Order (Right-to-Left visual): 
+                // Line 1: Balance (card-3), Sent (card-2), Received (card-1)
+                // Line 2: Net Remaining (subCard3), Partner (subCard2), Personal (subCard1)
+                cardsContainer.appendChild(card3);
+                cardsContainer.appendChild(card2);
+                cardsContainer.appendChild(card1);
+
+                subCardsContainer.appendChild(subCard3);
+                subCardsContainer.appendChild(subCard2);
+                subCardsContainer.appendChild(subCard1);
+
+                // Scroll right
                 setTimeout(() => {
                     tableContainer.scrollLeft = tableContainer.scrollWidth;
                 }, 50);
             } else {
                 mainTable.dir = 'ltr';
-                // English click par table left side scroll ho jaye
+                // English Order (Left-to-Right visual):
+                // Line 1: Received (card-1), Sent (card-2), Balance (card-3)
+                // Line 2: Personal (subCard1), Partner (subCard2), Net Remaining (subCard3)
+                cardsContainer.appendChild(card1);
+                cardsContainer.appendChild(card2);
+                cardsContainer.appendChild(card3);
+
+                subCardsContainer.appendChild(subCard1);
+                subCardsContainer.appendChild(subCard2);
+                subCardsContainer.appendChild(subCard3);
+
+                // Scroll left
                 setTimeout(() => {
                     tableContainer.scrollLeft = 0;
                 }, 50);
@@ -863,6 +910,8 @@
             document.querySelectorAll('.modal-input-desc').forEach(el => {
                  el.placeholder = (lang === 'ur') ? "تفصیل" : "Description";
             });
+
+            renderData(); 
         }
 
         setLanguage('en'); 
