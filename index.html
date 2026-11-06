@@ -196,14 +196,26 @@
         .text-right { text-align: right !important; padding-right: 6px !important; }
         .text-left { text-align: left !important; padding-left: 6px !important; }
         
-        .urdu-text-align {
+        /* Alignment classes based on text script */
+        .urdu-desc-align {
             text-align: right !important;
             padding-right: 6px !important;
+            direction: rtl !important;
         }
-        .english-desc-in-urdu {
+        .english-desc-align {
             text-align: left !important;
             padding-left: 6px !important;
             direction: ltr !important;
+        }
+
+        /* Header alignment based on page language */
+        html[lang="ur"] .th-desc-header {
+            text-align: right !important;
+            padding-right: 6px !important;
+        }
+        html[lang="en"] .th-desc-header {
+            text-align: left !important;
+            padding-left: 6px !important;
         }
 
         /* Inline Editable Cells */
@@ -378,6 +390,7 @@
                         <option value="Main">Main</option>
                         <option value="Personal">Personal</option>
                         <option value="Partner">Partner</option>
+                        <option value="Full Detail" data-i18n="opt-full">Full Detail</option>
                     </select>
                 </div>
                 <button type="button" id="open-add-modal-btn" class="add-btn" style="width: auto; padding: 5px 12px;" data-i18n="add-btn">+ Add New Entry</button>
@@ -391,7 +404,7 @@
                 <button type="button" class="export-btn btn-jpg" id="btn-jpg">JPG</button>
             </div>
 
-            <!-- Summary Totals (1st line cards: Received, Sent, Balance) -->
+            <!-- Summary Totals (1st line cards) -->
             <div class="summary-cards" id="summary-cards-container">
                 <div class="summary-card card-received" id="card-1">
                     <span style="font-size: 10px; opacity: 0.9; display: block; font-weight: bold; letter-spacing: 0.5px;" data-i18n="m-acc-1">MAIN ACCOUNT</span>
@@ -410,7 +423,7 @@
                 </div>
             </div>
 
-            <!-- Main Account Extra Summary Cards (2nd line cards: Personal, Partner, Net Remaining) -->
+            <!-- Main Account Extra Summary Cards (2nd line cards) -->
             <div id="main-breakdown-cards" class="summary-cards" style="display: none;">
                 <div class="summary-card card-personal-exp" id="sub-card-1">
                     <h4 data-i18n="p-exp">Personal Expense</h4>
@@ -431,10 +444,10 @@
         <div id="table-container" class="table-portion">
             <table id="main-view-table">
                 <thead>
-                    <tr>
+                    <tr id="table-header-row">
                         <th style="width: 7%;" data-i18n="th-sno">Sr.No</th>
                         <th style="width: 9%;" data-i18n="th-dt">Date</th>
-                        <th style="width: 31%;" class="text-left urdu-text-align" data-i18n="th-ds">Description</th>
+                        <th style="width: 31%;" class="th-desc-header" data-i18n="th-ds">Description</th>
                         <th style="width: 17%;" class="text-right" data-i18n="th-ar">Amount<br>Received</th>
                         <th style="width: 17%;" class="text-right" data-i18n="th-as">Amount<br>Send</th>
                         <th style="width: 19%;" class="text-right" data-i18n="th-to">Total</th>
@@ -637,6 +650,7 @@
 
         function renderData() {
             const selectedAccount = accountFilter.value.toLowerCase().trim();
+            const currentLang = document.documentElement.lang || 'en';
             expenseList.innerHTML = '';
 
             let count = 1;
@@ -644,13 +658,45 @@
             let totalSent = 0;
             let runningTotal = 0;
 
-            const filteredData = allExpensesData.filter(item => {
+            const isFullDetail = (selectedAccount === 'full detail');
+
+            const headerRow = document.getElementById('table-header-row');
+            const tableFooter = document.getElementById('table-footer');
+            const openAddModalBtn = document.getElementById('open-add-modal-btn');
+
+            if (isFullDetail) {
+                tableFooter.style.display = 'none';
+                openAddModalBtn.style.display = 'none';
+                headerRow.innerHTML = `
+                    <th style="width: 7%;" data-i18n="th-sno">${translations[currentLang]["th-sno"]}</th>
+                    <th style="width: 9%;" data-i18n="th-dt">${translations[currentLang]["th-dt"]}</th>
+                    <th style="width: 31%;" class="th-desc-header" data-i18n="th-ds">${translations[currentLang]["th-ds"]}</th>
+                    <th style="width: 17%;" class="text-right" data-i18n="th-ar">${translations[currentLang]["th-ar"]}</th>
+                    <th style="width: 17%;" class="text-right" data-i18n="th-as">${translations[currentLang]["th-as"]}</th>
+                    <th style="width: 19%;" class="text-right" data-i18n="th-to">${translations[currentLang]["th-to"]}</th>
+                `;
+            } else {
+                tableFooter.style.display = '';
+                openAddModalBtn.style.display = '';
+                headerRow.innerHTML = `
+                    <th style="width: 7%;" data-i18n="th-sno">${translations[currentLang]["th-sno"]}</th>
+                    <th style="width: 9%;" data-i18n="th-dt">${translations[currentLang]["th-dt"]}</th>
+                    <th style="width: 31%;" class="th-desc-header" data-i18n="th-ds">${translations[currentLang]["th-ds"]}</th>
+                    <th style="width: 17%;" class="text-right" data-i18n="th-ar">${translations[currentLang]["th-ar"]}</th>
+                    <th style="width: 17%;" class="text-right" data-i18n="th-as">${translations[currentLang]["th-as"]}</th>
+                    <th style="width: 19%;" class="text-right" data-i18n="th-to">${translations[currentLang]["th-to"]}</th>
+                    <th style="width: 10%;" data-i18n="th-ac" id="action-header">${translations[currentLang]["th-ac"]}</th>
+                `;
+            }
+
+            const filteredData = isFullDetail ? allExpensesData : allExpensesData.filter(item => {
                 const acc = (item.expense.account || '').toLowerCase().trim();
                 return acc === selectedAccount;
             });
 
             if (filteredData.length === 0) {
-                expenseList.innerHTML = `<tr><td colspan="7" style="color: #666; padding: 12px;">No records found</td></tr>`;
+                const colspanVal = isFullDetail ? 6 : 7;
+                expenseList.innerHTML = `<tr><td colspan="${colspanVal}" style="color: #666; padding: 12px;">No records found</td></tr>`;
             }
 
             filteredData.forEach(item => {
@@ -669,50 +715,55 @@
                 const tdDate = document.createElement('td'); 
                 tdDate.className = 'date-cell'; 
                 tdDate.innerHTML = formatDateDisplay(expense.date);
-                makeCellEditable(tdDate, id, 'date', expense.date || '', 'date');
+                if (!isFullDetail) makeCellEditable(tdDate, id, 'date', expense.date || '', 'date');
 
                 const tdDesc = document.createElement('td'); 
-                
                 const descText = expense.desc || '-';
-                const isEnglishText = /^[A-Za-z0-9\s\-_.,()]+$/.test(descText);
-                const currentLang = document.documentElement.lang;
+                
+                // Detect if text contains Urdu/Arabic characters
+                const hasUrdu = /[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/.test(descText);
 
-                if (currentLang === 'ur' && isEnglishText) {
-                    tdDesc.className = 'text-left english-desc-in-urdu';
+                // Always align Urdu text to Right and English text to Left regardless of button mode
+                if (hasUrdu) {
+                    tdDesc.className = 'urdu-desc-align';
                 } else {
-                    tdDesc.className = 'text-left urdu-text-align';
+                    tdDesc.className = 'english-desc-align';
                 }
 
                 tdDesc.innerText = descText;
-                makeCellEditable(tdDesc, id, 'desc', expense.desc || '', 'text');
+                if (!isFullDetail) makeCellEditable(tdDesc, id, 'desc', expense.desc || '', 'text');
 
                 const tdRec = document.createElement('td'); 
                 tdRec.className = 'text-right'; tdRec.style.color = '#28a745'; tdRec.style.fontWeight = 'bold';
                 tdRec.innerText = formatNumber(rec);
-                makeCellEditable(tdRec, id, 'received', rec, 'number');
+                if (!isFullDetail) makeCellEditable(tdRec, id, 'received', rec, 'number');
 
                 const tdSent = document.createElement('td'); 
                 tdSent.className = 'text-right'; tdSent.style.color = '#dc3545'; tdSent.style.fontWeight = 'bold';
                 tdSent.innerText = formatNumber(sent);
-                makeCellEditable(tdSent, id, 'sent', sent, 'number');
+                if (!isFullDetail) makeCellEditable(tdSent, id, 'sent', sent, 'number');
 
                 const tdTot = document.createElement('td'); 
                 tdTot.className = 'text-right'; tdTot.style.fontWeight = 'bold'; tdTot.innerText = formatNumber(runningTotal);
 
-                const tdAction = document.createElement('td');
-                tdAction.className = 'action-col-content'; 
-                tdAction.innerHTML = `
-                    <div class="action-btns">
-                        <button class="icon-btn edit-icon-btn edit-btn" data-id="${id}" data-date="${expense.date || ''}" data-desc="${expense.desc || ''}" data-received="${rec}" data-sent="${sent}" title="Edit">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        </button>
-                        <button class="icon-btn delete-icon-btn delete-btn" data-id="${id}" title="Delete">
-                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-                        </button>
-                    </div>
-                `;
+                if (isFullDetail) {
+                    tr.append(tdSno, tdDate, tdDesc, tdRec, tdSent, tdTot);
+                } else {
+                    const tdAction = document.createElement('td');
+                    tdAction.className = 'action-col-content'; 
+                    tdAction.innerHTML = `
+                        <div class="action-btns">
+                            <button class="icon-btn edit-icon-btn edit-btn" data-id="${id}" data-date="${expense.date || ''}" data-desc="${expense.desc || ''}" data-received="${rec}" data-sent="${sent}" title="Edit">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                            <button class="icon-btn delete-icon-btn delete-btn" data-id="${id}" title="Delete">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                            </button>
+                        </div>
+                    `;
+                    tr.append(tdSno, tdDate, tdDesc, tdRec, tdSent, tdTot, tdAction);
+                }
 
-                tr.append(tdSno, tdDate, tdDesc, tdRec, tdSent, tdTot, tdAction);
                 expenseList.appendChild(tr);
             });
 
@@ -723,7 +774,7 @@
             document.getElementById('total-sent').innerText = formatNumber(totalSent);
             document.getElementById('total-balance').innerText = formatNumber(mainBalance);
 
-            if (selectedAccount === 'main') {
+            if (selectedAccount === 'main' || isFullDetail) {
                 document.getElementById('main-breakdown-cards').style.display = 'flex';
                 let personalExp = 0, partnerExp = 0;
                 allExpensesData.forEach(item => {
@@ -799,6 +850,7 @@
         const translations = {
             en: {
                 "sel-acc": "Select Account:",
+                "opt-full": "Full Detail",
                 "add-btn": "+ Add New Entry",
                 "m-acc-1": "MAIN ACCOUNT",
                 "m-acc-2": "MAIN ACCOUNT",
@@ -828,6 +880,7 @@
             },
             ur: {
                 "sel-acc": "اکاؤنٹ منتخب کریں:",
+                "opt-full": "مکمل تفصیل",
                 "add-btn": "+ نئی انٹری",
                 "m-acc-1": "مین اکاؤنٹ",
                 "m-acc-2": "مین اکاؤنٹ",
@@ -874,7 +927,6 @@
             if (lang === 'ur') {
                 mainTable.dir = 'rtl';
                 
-                // Keep original order so buttons stay in their standard positions
                 cardsContainer.appendChild(card1);
                 cardsContainer.appendChild(card2);
                 cardsContainer.appendChild(card3);
@@ -883,7 +935,6 @@
                 subCardsContainer.appendChild(subCard2);
                 subCardsContainer.appendChild(subCard3);
 
-                // Scroll right
                 setTimeout(() => {
                     tableContainer.scrollLeft = tableContainer.scrollWidth;
                 }, 50);
@@ -898,7 +949,6 @@
                 subCardsContainer.appendChild(subCard2);
                 subCardsContainer.appendChild(subCard3);
 
-                // Scroll left
                 setTimeout(() => {
                     tableContainer.scrollLeft = 0;
                 }, 50);
@@ -930,32 +980,35 @@
 
 
         /* ==============================================
-           EXPORT LOGIC - 445PX TABLE & 500PX CONTAINER
+           EXPORT LOGIC
            ============================================== */
         
         function prepareForExport() {
             const container = document.getElementById('main-container');
-            
             container.classList.add('export-mode');
             
-            // Hide unwanted elements
             document.getElementById('export-buttons-group').style.display = 'none';
             document.getElementById('account-select-row').style.display = 'none';
             document.getElementById('table-footer').style.display = 'none';
-            document.getElementById('action-header').style.display = 'none';
+            const actionHdr = document.getElementById('action-header');
+            if (actionHdr) actionHdr.style.display = 'none';
             document.querySelectorAll('.action-col-content').forEach(el => el.style.display = 'none');
         }
 
         function restoreAfterExport() {
             const container = document.getElementById('main-container');
-            
             container.classList.remove('export-mode');
             
-            // Restore visibility
             document.getElementById('export-buttons-group').style.display = 'flex';
             document.getElementById('account-select-row').style.display = 'flex';
-            document.getElementById('table-footer').style.display = '';
-            document.getElementById('action-header').style.display = '';
+            
+            const selectedAccount = accountFilter.value.toLowerCase().trim();
+            if (selectedAccount !== 'full detail') {
+                document.getElementById('table-footer').style.display = '';
+            }
+            
+            const actionHdr = document.getElementById('action-header');
+            if (actionHdr) actionHdr.style.display = '';
             document.querySelectorAll('.action-col-content').forEach(el => el.style.display = '');
         }
 
